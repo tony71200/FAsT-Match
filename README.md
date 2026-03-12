@@ -50,3 +50,18 @@ corners = matcher.match_paths("image.png", "template.png")
 ```
 
 > Note: C++ dependencies are still required at build-time (OpenCV + TBB).
+
+
+### Test với ảnh mẫu có sẵn
+
+Sau khi đã cài package (`python -m pip install .`), chạy smoke test:
+
+```bash
+python tests/test_samples.py
+```
+
+Script sẽ thử 2 cặp ảnh:
+- `image.png` + `template.png`
+- `image2.png` + `template2.png`
+
+Kết quả thành công sẽ in ra 4 góc khớp tìm được cho từng cặp ảnh.
