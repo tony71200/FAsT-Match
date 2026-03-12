@@ -49,7 +49,7 @@ matcher.init(epsilon=0.15, delta=0.85, min_scale=0.5, max_scale=2.0)
 corners = matcher.match_paths("image.png", "template.png")
 ```
 
-> Note: C++ dependencies are still required at build-time (OpenCV + TBB).
+> Note: OpenCV C++ SDK is required at build-time (headers + libs + `OpenCVConfig.cmake`).
 
 
 ### Test với ảnh mẫu có sẵn
@@ -92,4 +92,21 @@ print(corners)
 
 ```bash
 python tests/test_samples2.py
+```
+
+
+### Windows build note (OpenCV_DIR)
+
+Nếu gặp lỗi `Could not find OpenCVConfig.cmake`, bạn cần trỏ đúng đường dẫn OpenCV cho CMake:
+
+```bat
+set OpenCV_DIR=C:\opencv\build
+python -m pip install . --config-settings=cmake.args=-DOpenCV_DIR=%OpenCV_DIR%
+```
+
+Hoặc PowerShell:
+
+```powershell
+$env:OpenCV_DIR = "C:/opencv/build"
+python -m pip install . --config-settings=cmake.args=-DOpenCV_DIR=$env:OpenCV_DIR
 ```

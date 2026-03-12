@@ -9,7 +9,6 @@
 #include "FAsTMatch.h"
 #include <iomanip>
 #include <random>
-#include <tbb/tbb.h>
 
 
 #define WITHIN( val, top_left, bottom_right ) (\
@@ -187,7 +186,7 @@ namespace fast_match {
         vector<MatchConfig> configs( grid_size );
         
         /* Iterate thru each possible affine configuration steps */
-        tbb::parallel_for( 0, ntx_steps, 1, [&](int tx_index) {
+        for( int tx_index = 0; tx_index < ntx_steps; tx_index++ ) {
             float tx = tx_steps[tx_index];
             
             for(int ty_index = 0; ty_index < nty_steps; ty_index++ ) {
@@ -219,9 +218,8 @@ namespace fast_match {
                     }
                 }
             }
-        });
-        
-        
+        }
+
         return configs;
     }
 
@@ -300,7 +298,7 @@ namespace fast_match {
         insiders.assign( no_of_configs, false );
         
         /* Convert each configuration to corresponding affine transformation matrix */
-        tbb::parallel_for( 0, no_of_configs, 1, [&](int i) {
+        for( int i = 0; i < no_of_configs; i++ ) {
             Mat affine = configs[i].getAffineMatrix();
             
             /* Check if our affine transformed rectangle still fits within our boundary */
@@ -315,8 +313,8 @@ namespace fast_match {
                 affines[i]  = affine;
                 insiders[i] = true;
             }
-        });
-        
+        }
+
         /* Filter out empty affine matrices (which initially don't fit within the preset boundary) */
         /* It's done this way, so that I could parallelize the loop */
         vector<Mat> result;
@@ -366,7 +364,7 @@ namespace fast_match {
         vector<double> distances(no_of_configs, 0.0 );
         
         /* Calculate the score for each configurations on each of our randomly sampled points */
-        tbb::parallel_for( 0, no_of_configs, 1, [&](int i) {
+        for( int i = 0; i < no_of_configs; i++ ) {
 
             float a11 = affine_matrices[i].at<float>(0, 0),
                   a12 = affine_matrices[i].at<float>(0, 1),

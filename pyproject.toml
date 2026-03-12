@@ -23,4 +23,4 @@ classifiers = [
 
 [tool.scikit-build]
 wheel.packages = ["fast_match"]
-cmake.verbose = true
+build.verbose = true

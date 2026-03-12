@@ -8,7 +8,6 @@
 
 #include "MatchConfig.h"
 #include <iomanip>
-#include <tbb/tbb.h>
 
 using namespace std;
 using namespace cv;
@@ -49,10 +48,10 @@ namespace fast_match {
 
     vector<MatchConfig> MatchConfig::fromMatrix(Mat& configs) {
         vector<MatchConfig> result( configs.rows );
-        tbb::parallel_for(0, configs.rows, 1, [&]( int i ){
+        for( int i = 0; i < configs.rows; i++ ) {
             float * ptr = configs.ptr<float>(i);
             result[i].init( ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5] );
-        });
+        }
         return result;
     }
     
