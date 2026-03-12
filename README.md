@@ -18,3 +18,35 @@ You can find the original Matlab code and literature here: http://www.eng.tau.ac
 
 One of the example image and template sets are taken from K. Mikolajczyk's dataset which is available here:
 http://www.robots.ox.ac.uk/~vgg/research/affine/
+
+## Python package
+
+Project now supports building as a Python library so it can be reused in other Python programs.
+
+### Build wheel
+
+```bash
+python -m pip install build
+python -m build
+```
+
+### Install locally
+
+```bash
+python -m pip install .
+```
+
+### Example usage
+
+```python
+from fast_match import match_template_paths, FastMatch
+
+corners = match_template_paths("image.png", "template.png")
+print(corners)
+
+matcher = FastMatch()
+matcher.init(epsilon=0.15, delta=0.85, min_scale=0.5, max_scale=2.0)
+corners = matcher.match_paths("image.png", "template.png")
+```
+
+> Note: C++ dependencies are still required at build-time (OpenCV + TBB).

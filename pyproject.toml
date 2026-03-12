@@ -1,0 +1,26 @@
+[build-system]
+requires = [
+  "scikit-build-core>=0.10",
+  "pybind11>=2.11",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fast-match"
+version = "0.1.0"
+description = "Python bindings for the FAsT-Match affine template matcher"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "FAsT-Match contributors" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+[tool.scikit-build]
+wheel.packages = ["fast_match"]
+cmake.verbose = true
