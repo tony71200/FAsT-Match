@@ -65,3 +65,31 @@ Script sẽ thử 2 cặp ảnh:
 - `image2.png` + `template2.png`
 
 Kết quả thành công sẽ in ra 4 góc khớp tìm được cho từng cặp ảnh.
+
+
+### Build C++ shared library (DLL/SO/DYLIB) cho Python dùng qua ctypes
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+Sau khi build xong sẽ có thư viện chia sẻ:
+- Linux: `build/libfast_match_capi.so`
+- macOS: `build/libfast_match_capi.dylib`
+- Windows: `build/Release/fast_match_capi.dll` (hoặc `build/Debug/...`)
+
+Ví dụ gọi từ Python bằng ctypes wrapper:
+
+```python
+from fast_match import match_template_paths_via_dll
+
+corners = match_template_paths_via_dll("image.png", "template.png")
+print(corners)
+```
+
+### Test trường hợp dùng DLL
+
+```bash
+python tests/test_samples2.py
+```
