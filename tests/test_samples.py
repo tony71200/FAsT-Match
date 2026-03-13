@@ -55,8 +55,6 @@ def _validate_corners(corners: list[list[float]], image_path: Path) -> None:
 def main() -> int:
     try:
         from fast_match import match_template_paths
-        if match_template_paths is None:
-            raise RuntimeError("fast_match extension is not available")
     except Exception as exc:  # pragma: no cover
         print("[ERROR] Cannot import fast_match package.")
         print("Install/build it first, for example: python -m pip install .")

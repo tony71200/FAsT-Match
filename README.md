@@ -70,9 +70,11 @@ Kết quả thành công sẽ in ra 4 góc khớp tìm được cho từng cặp
 ### Build C++ shared library (DLL/SO/DYLIB) cho Python dùng qua ctypes
 
 ```bash
-cmake -S . -B build
+cmake -S . -B build -DFAST_MATCH_BUILD_PYTHON=OFF
 cmake --build build
 ```
+
+> Nếu bạn chỉ cần DLL thì đặt `FAST_MATCH_BUILD_PYTHON=OFF` để không cần cài `pybind11`.
 
 Sau khi build xong sẽ có thư viện chia sẻ:
 - Linux: `build/libfast_match_capi.so`

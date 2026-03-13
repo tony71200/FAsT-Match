@@ -4,6 +4,8 @@ project(fast_match_python LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(FAST_MATCH_BUILD_PYTHON "Build pybind11 Python extension" ON)
+
 if(NOT OpenCV_DIR AND DEFINED ENV{OpenCV_DIR})
     set(OpenCV_DIR "$ENV{OpenCV_DIR}" CACHE PATH "Path to OpenCVConfig.cmake")
 endif()
@@ -18,9 +20,6 @@ if(NOT OpenCV_FOUND)
     )
 endif()
 
-set(PYBIND11_FINDPYTHON ON)
-find_package(pybind11 CONFIG REQUIRED)
-
 set(FAST_MATCH_SOURCES
     FAsT-Match/FAsTMatch.cpp
     FAsT-Match/MatchConfig.cpp
@@ -34,14 +33,29 @@ add_library(fast_match_capi SHARED
 target_include_directories(fast_match_capi PRIVATE FAsT-Match)
 target_link_libraries(fast_match_capi PRIVATE ${OpenCV_LIBS})
 set_target_properties(fast_match_capi PROPERTIES OUTPUT_NAME "fast_match_capi")
-
-pybind11_add_module(_fast_match
-    python/src/bindings.cpp
-    ${FAST_MATCH_SOURCES}
-)
-
-target_include_directories(_fast_match PRIVATE FAsT-Match)
-target_link_libraries(_fast_match PRIVATE ${OpenCV_LIBS})
-
-install(TARGETS _fast_match DESTINATION fast_match)
 install(TARGETS fast_match_capi DESTINATION fast_match)
+
+if(FAST_MATCH_BUILD_PYTHON)
+    set(PYBIND11_FINDPYTHON ON)
+    if(DEFINED SKBUILD)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        find_package(pybind11 CONFIG QUIET)
+    endif()
+
+    if(pybind11_FOUND)
+        pybind11_add_module(_fast_match
+            python/src/bindings.cpp
+            ${FAST_MATCH_SOURCES}
+        )
+
+        target_include_directories(_fast_match PRIVATE FAsT-Match)
+        target_link_libraries(_fast_match PRIVATE ${OpenCV_LIBS})
+        install(TARGETS _fast_match DESTINATION fast_match)
+    elseif(NOT DEFINED SKBUILD)
+        message(WARNING
+            "pybind11 was not found, so Python extension _fast_match will not be built.\n"
+            "Install pybind11 and rerun CMake, or configure with -DFAST_MATCH_BUILD_PYTHON=OFF."
+        )
+    endif()
+endif()
