@@ -8,7 +8,6 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 SAMPLES = [
     (ROOT / "image.png", ROOT / "template.png"),
     (ROOT / "image2.png", ROOT / "template2.png"),

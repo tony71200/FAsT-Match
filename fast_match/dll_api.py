@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -21,6 +22,51 @@ def _default_library_candidates() -> Iterable[Path]:
     )
 
 
+def _windows_dependency_dirs(library_path: Path) -> list[Path]:
+    dirs: list[Path] = []
+
+    # Ensure directory of fast_match_capi.dll is searched first.
+    dirs.append(library_path.parent)
+
+    # Common OpenCV runtime location from OpenCV_DIR env, e.g. C:/opencv/build/x64/vc17/bin
+    opencv_dir = os.environ.get("OpenCV_DIR")
+    if opencv_dir:
+        base = Path(opencv_dir)
+        dirs.extend(
+            [
+                base / "x64" / "vc17" / "bin",
+                base / "x64" / "vc16" / "bin",
+                base / "bin",
+            ]
+        )
+
+    # Respect any user-provided extra DLL directories.
+    extra = os.environ.get("FAST_MATCH_DLL_DIRS")
+    if extra:
+        for part in extra.split(os.pathsep):
+            if part.strip():
+                dirs.append(Path(part.strip()))
+
+    # Keep existing order but remove duplicates.
+    seen: set[str] = set()
+    result: list[Path] = []
+    for item in dirs:
+        key = str(item.resolve()) if item.exists() else str(item)
+        if key not in seen:
+            seen.add(key)
+            result.append(item)
+    return result
+
+
+def _register_windows_dll_dirs(library_path: Path) -> None:
+    if os.name != "nt" or not hasattr(os, "add_dll_directory"):
+        return
+
+    for dll_dir in _windows_dependency_dirs(library_path):
+        if dll_dir.exists():
+            os.add_dll_directory(str(dll_dir))
+
+
 def _load_library(library_path: str | Path | None):
     if library_path is None:
         for cand in _default_library_candidates():
@@ -33,7 +79,19 @@ def _load_library(library_path: str | Path | None):
             "Cannot find fast_match_capi shared library. Build it first with CMake."
         )
 
-    lib = ctypes.CDLL(str(library_path))
+    lib_path = Path(library_path)
+    _register_windows_dll_dirs(lib_path)
+
+    try:
+        lib = ctypes.CDLL(str(lib_path))
+    except OSError as exc:
+        raise FastMatchDllError(
+            "Cannot load fast_match_capi shared library. "
+            "On Windows this often means missing dependent DLLs (e.g. OpenCV runtime). "
+            "Set OpenCV_DIR correctly or add runtime folders via FAST_MATCH_DLL_DIRS. "
+            f"Library: {lib_path}. Original error: {exc}"
+        ) from exc
+
     func = lib.fast_match_template_paths
     func.argtypes = [
         ctypes.c_char_p,

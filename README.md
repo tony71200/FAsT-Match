@@ -155,3 +155,21 @@ python -m pip install . --config-settings=cmake.args=-DOpenCV_DIR=$env:OpenCV_DI
    - **Nguyên nhân**: môi trường mạng chặn truy cập index package.
    - **Cách sửa**:
      - cấu hình mirror/proxy nội bộ hoặc cài dependency offline trước khi chạy `python -m pip install .`.
+
+
+6. **`python tests/test_samples.py` báo `No module named fast_match._fast_match` dù đã cài thành công**
+   - **Nguyên nhân**:
+     - Script test trước đây chèn root repo vào `sys.path`, khiến Python ưu tiên import package source trong repo (không có file extension đã build) thay vì package đã cài trong site-packages.
+   - **Cách sửa**:
+     - Đã bỏ `sys.path.insert(0, ROOT)` trong `tests/test_samples.py` và `tests/test_samples2.py` để test dùng đúng package đã cài.
+
+7. **`python tests/test_samples2.py` báo `Could not find module ... fast_match_capi.dll (or one of its dependencies)`**
+   - **Nguyên nhân**:
+     - DLL chính có thể tồn tại, nhưng thiếu DLL phụ thuộc runtime (thường là OpenCV `opencv_world*.dll`) trong `PATH`/DLL search path.
+   - **Cách sửa**:
+     - `fast_match/dll_api.py` đã được cập nhật để:
+       - tự thêm thư mục chứa `fast_match_capi.dll` vào DLL search path,
+       - tự dò các thư mục OpenCV runtime từ `OpenCV_DIR` (ví dụ `x64/vc17/bin`, `bin`),
+       - cho phép thêm thủ công qua biến môi trường `FAST_MATCH_DLL_DIRS`.
+     - Nếu vẫn lỗi, set thêm:
+       - `set FAST_MATCH_DLL_DIRS=C:\opencv\build\x64\vc17\bin`
