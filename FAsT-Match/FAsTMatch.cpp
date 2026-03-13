@@ -9,6 +9,8 @@
 #include "FAsTMatch.h"
 #include <iomanip>
 #include <random>
+#include <cmath>
+#include <numeric>
 
 
 #define WITHIN( val, top_left, bottom_right ) (\
@@ -45,8 +47,8 @@ namespace fast_match {
                 max_trans_x  = -min_trans_x,
                 min_trans_y  = -(r2y - r1y * minScale),
                 max_trans_y  = -min_trans_y,
-                min_rotation = -M_PI,
-                max_rotation =  M_PI;
+                min_rotation = -CV_PI,
+                max_rotation =  CV_PI;
         
         /* Create the matching grid / net */
         MatchNet net( templ.cols, templ.rows, delta, min_trans_x, max_trans_x, min_trans_y, max_trans_y,
@@ -115,7 +117,7 @@ namespace fast_match {
                 break;
             
             if( level > 3 ) {
-                float mean_value = std::accumulate( best_distances.begin() + level - 3, best_distances.begin() + level - 1, 0 ) * 1.0 / distances.size();
+                float mean_value = std::accumulate( best_distances.begin() + level - 3, best_distances.begin() + level - 1, 0.0 ) * 1.0 / distances.size();
                 
                 if( best_distance > mean_value * 0.97 )
                     break;
@@ -175,9 +177,9 @@ namespace fast_match {
             nr2_steps = nr_steps;
         
         /* Refine the number of steps for the 2nd rotation parameter */
-        if( fabs((net.boundsRotate.second - net.boundsRotate.first) - (2 * M_PI)) < 0.1 ) {
+        if( fabs((net.boundsRotate.second - net.boundsRotate.first) - (2 * CV_PI)) < 0.1 ) {
             nr2_steps = (int) count_if( r_steps.begin(), r_steps.end(), [&]( float r ){
-                return r < (-M_PI / 2  + net.stepsRotate / 2);
+                return r < (-CV_PI / 2  + net.stepsRotate / 2);
             });
         }
         
@@ -426,8 +428,8 @@ namespace fast_match {
             }
             
             distances[i] = score / no_of_points;
-        });
-        
+        }
+
         return distances;
     }
 
@@ -494,7 +496,7 @@ namespace fast_match {
     Mat FAsTMatch::preprocessImage( Mat& image ) {
         Mat temp = image.clone();
         if( temp.channels() != 1 )
-            cvtColor( temp, temp, CV_BGR2GRAY );
+            cvtColor( temp, temp, cv::COLOR_BGR2GRAY );
         
         if( temp.type() != CV_32FC1 )
             temp.convertTo( temp, CV_32FC1, 1.0 / 255.0 );

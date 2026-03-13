@@ -18,6 +18,7 @@ if(NOT OpenCV_FOUND)
     )
 endif()
 
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 set(FAST_MATCH_SOURCES
