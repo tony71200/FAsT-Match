@@ -112,3 +112,46 @@ Hoặc PowerShell:
 $env:OpenCV_DIR = "C:/opencv/build"
 python -m pip install . --config-settings=cmake.args=-DOpenCV_DIR=$env:OpenCV_DIR
 ```
+
+### Các lỗi đã gặp gần đây, nguyên nhân và cách sửa
+
+1. **Lỗi khi chạy `cmake -S . -B build`: thiếu `pybind11Config.cmake`**
+   - **Biểu hiện**: CMake báo không tìm thấy `pybind11Config.cmake` / `pybind11-config.cmake`.
+   - **Nguyên nhân**: trước đây CMake luôn yêu cầu `pybind11` dù bạn chỉ muốn build DLL (`fast_match_capi`).
+   - **Cách sửa**:
+     - Đã cập nhật CMake để hỗ trợ build DLL độc lập với option:
+       `-DFAST_MATCH_BUILD_PYTHON=OFF`.
+     - Nếu cần build cả Python extension thì cài `pybind11` và để `FAST_MATCH_BUILD_PYTHON=ON` (mặc định).
+
+2. **Lỗi sau khi `python -m pip install .` thành công nhưng chạy `python tests/test_samples.py` báo extension không có**
+   - **Biểu hiện**: `Details: fast_match extension is not available`.
+   - **Nguyên nhân**: `fast_match/__init__.py` cũ bắt mọi exception khi import `._fast_match` rồi gán `None`, làm mất lỗi gốc và gây khó chẩn đoán.
+   - **Cách sửa**:
+     - Đã đổi `__init__.py` để ném `ImportError` rõ ràng kèm lỗi gốc khi extension không load được.
+     - Nhờ đó biết chính xác lỗi thật (thiếu file `.pyd/.so`, thiếu runtime DLL, sai môi trường, ...).
+
+3. **Lỗi compile trên Windows/MSVC (OpenCV 4.x)**
+   - **Biểu hiện**:
+     - `M_PI` undeclared
+     - `std::accumulate` không nhận đúng hàm, đụng `cv::accumulate`
+     - syntax error do dấu đóng ngoặc
+     - `CV_BGR2GRAY` undeclared
+   - **Nguyên nhân**:
+     - Khác biệt tương thích giữa compiler/platform và API OpenCV cũ.
+   - **Cách sửa**:
+     - thay `M_PI` -> `CV_PI`
+     - thêm header `<numeric>` và dùng `std::accumulate(..., 0.0)`
+     - sửa lỗi đóng ngoặc trong `FAsTMatch.cpp`
+     - thay `CV_BGR2GRAY` -> `cv::COLOR_BGR2GRAY`
+
+4. **Lỗi không tìm thấy OpenCVConfig.cmake**
+   - **Biểu hiện**: CMake dừng ở `find_package(OpenCV ...)`.
+   - **Nguyên nhân**: chưa trỏ đúng `OpenCV_DIR` (thư mục chứa `OpenCVConfig.cmake`).
+   - **Cách sửa**:
+     - set `OpenCV_DIR` đúng và truyền qua pip/cmake như hướng dẫn ở mục **Windows build note (OpenCV_DIR)** phía trên.
+
+5. **Lỗi môi trường mạng/proxy khi cài dependency build**
+   - **Biểu hiện**: pip không tải được `scikit-build-core` (403/proxy).
+   - **Nguyên nhân**: môi trường mạng chặn truy cập index package.
+   - **Cách sửa**:
+     - cấu hình mirror/proxy nội bộ hoặc cài dependency offline trước khi chạy `python -m pip install .`.
